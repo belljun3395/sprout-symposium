@@ -2,6 +2,7 @@ package com.sproutt.symposium;
 
 import com.sproutt.symposium.lock.LocalLockService;
 import com.sproutt.symposium.lock.LockService;
+import com.sproutt.symposium.lock.RedisLockService;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
@@ -16,7 +17,7 @@ public class SymposiumService {
 	private final CountDownService countDownService;
 	private AtomicLong atomicUserId = new AtomicLong(0L);
 
-	public SymposiumService(LocalLockService lockService, CountDownService countDownService) {
+	public SymposiumService(RedisLockService lockService, CountDownService countDownService) {
 		this.lockService = lockService;
 		this.countDownService = countDownService;
 	}
