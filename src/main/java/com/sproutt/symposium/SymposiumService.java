@@ -1,25 +1,24 @@
 package com.sproutt.symposium;
 
 import com.sproutt.symposium.event.CountDownMessage;
-import com.sproutt.symposium.event._CountDownMessageTemplate;
 import com.sproutt.symposium.repository.CountDownMessageRecords;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SymposiumService {
 
 	private final Logger log = LoggerFactory.getLogger(SymposiumService.class);
-	private final _CountDownMessageTemplate messageTemplate;
+	private final RabbitTemplate messageTemplate;
 	private final CountDownMessageRecords messageRepo;
 
 	private AtomicLong atomicUserId = new AtomicLong(0L);
 
-	public SymposiumService(
-			_CountDownMessageTemplate messageTemplate, CountDownMessageRecords messageRepo) {
+	public SymposiumService(RabbitTemplate messageTemplate, CountDownMessageRecords messageRepo) {
 		this.messageTemplate = messageTemplate;
 		this.messageRepo = messageRepo;
 	}
@@ -30,7 +29,7 @@ public class SymposiumService {
 		log.info("[{}] User {} is trying to execute", now, userId);
 
 		CountDownMessage message = new CountDownMessage("Counting down for user " + userId, userId);
-		messageTemplate.send(message);
+		messageTemplate.convertAndSend("direct.waiting", "direct.waiting", message);
 
 		message.onProcessed();
 		messageRepo.save(message);
