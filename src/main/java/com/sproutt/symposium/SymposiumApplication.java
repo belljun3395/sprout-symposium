@@ -46,4 +46,23 @@ public class SymposiumApplication {
 	Binding waitingQBinding() {
 		return BindingBuilder.bind(waitingQueue()).to(waitingDirect()).with("direct.waiting");
 	}
+
+	@Bean
+	DirectExchange waitingConsumerDirect() {
+		return new DirectExchange("direct.waiting.consumer");
+	}
+
+	@Bean
+	Queue waitingConsumerQueue() {
+		return QueueBuilder.durable("queue.waiting.consumer")
+				.withArgument(X_MESSAGE_TTL_KEY, X_MESSAGE_TTL)
+				.build();
+	}
+
+	@Bean
+	Binding waitingConsumerQBinding() {
+		return BindingBuilder.bind(waitingConsumerQueue())
+				.to(waitingConsumerDirect())
+				.with("direct.waiting.consumer");
+	}
 }
