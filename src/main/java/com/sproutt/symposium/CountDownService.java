@@ -19,4 +19,8 @@ public class CountDownService {
 			throw new RuntimeException("CountDown is already 0");
 		}
 	}
+
+	public int getCountDown() {
+		return countDown.get();
+	}
 }
