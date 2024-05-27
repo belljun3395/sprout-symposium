@@ -10,39 +10,45 @@ import org.springframework.stereotype.Service;
 @Service
 public class LocalLockService implements LockService {
 
+	/**
+	 * key: lockId<br>
+	 * value: Pair&lt;userId, isLocked&gt;<br>
+	 */
 	private final Map<Long, Pair<Long, Boolean>> locks = new ConcurrentHashMap<>();
+
+	/** userId를 대기시키기 위한 Queue */
 	private final Queue<Long> waitingQueue = new ConcurrentLinkedQueue<>();
 
 	@Override
-	public boolean lock(Long id, Long userId) {
-		// id에 대한 lock이 이미 사용 중인 경우
-		if (locks.containsKey(id)) {
-			// waitingQueue에 userId가 없는 경우 추가
+	public boolean lock(Long lockId, Long userId) {
+		// lockId 대한 락 정보가 있는 경우
+		if (locks.containsKey(lockId)) {
+			// waitingQueue에 userId가 없는 경우
 			if (!waitingQueue.contains(userId)) {
 				waitingQueue.add(userId);
 			}
 
-			// id에 대한 lock이 사용 중인 경우
-			if (locks.get(id).getRight()) {
-				return false;
-			} else {
-				// id에 대한 lock이 사용 중이지 않은 경우
+			Pair<Long, Boolean> lock = locks.get(lockId);
+			Boolean isLocked = lock.getRight();
+			// lockId에 대한 락이 사용 중이 아닌 경우
+			if (!isLocked) {
 				Long peek = waitingQueue.peek();
+
 				// waitingQueue의 첫 번째 요소가 userId인 경우
 				if (peek != null && peek.equals(userId)) {
-					locks.put(id, Pair.of(userId, true));
+					locks.put(lockId, Pair.of(userId, true));
 					waitingQueue.poll();
 					return true;
 				} else {
-					// waitingQueue의 첫 번째 요소가 userId가 아닌 경우
 					return false;
 				}
+			} else {
+				return false;
 			}
 		}
 
-		// id에 대한 lock이 없거나 사용 중이 아닌 경우
-		// userId가 사용 중 임을 표시
-		locks.put(id, Pair.of(userId, true));
+		// userId에게 락 정보가 없는 경우
+		locks.put(lockId, Pair.of(userId, true));
 		return true;
 	}
 
