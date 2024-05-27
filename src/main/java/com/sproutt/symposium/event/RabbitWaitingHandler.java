@@ -45,12 +45,13 @@ public class RabbitWaitingHandler {
 				countDownMessage.onProcessed();
 				countDownMessage.setLeftCount(leftCount);
 				log.info("Pass message to CountDownService: {}", countDownMessage);
+				messageTemplate.convertAndSend(
+						"direct.waiting.consumer", "direct.waiting.consumer", message);
 			} else {
 				StringFormattedMessage formattedMessage =
 						new StringFormattedMessage("CountDown is already 0, %s", countDownMessage.getId());
 				throw new RuntimeException(formattedMessage.getFormattedMessage());
 			}
-			messageTemplate.convertAndSend("direct.waiting.consumer", "direct.waiting.consumer", message);
 		} finally {
 			channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
 		}
