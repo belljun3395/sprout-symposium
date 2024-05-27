@@ -42,7 +42,7 @@ public class LocalLockService implements LockService {
 
 		// id에 대한 lock이 없거나 사용 중이 아닌 경우
 		// userId가 사용 중 임을 표시
-		locks.put(id, Pair.of(userId, false));
+		locks.put(id, Pair.of(userId, true));
 		return true;
 	}
 
