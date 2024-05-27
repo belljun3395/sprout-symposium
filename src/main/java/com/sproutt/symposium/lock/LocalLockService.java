@@ -21,35 +21,20 @@ public class LocalLockService implements LockService {
 
 	@Override
 	public boolean lock(Long lockId, Long userId) {
-		// lockId 대한 락 정보가 있는 경우
-		if (locks.containsKey(lockId)) {
-			// waitingQueue에 userId가 없는 경우
-			if (!waitingQueue.contains(userId)) {
-				waitingQueue.add(userId);
-			}
-
-			Pair<Long, Boolean> lock = locks.get(lockId);
-			Boolean isLocked = lock.getRight();
-			// lockId에 대한 락이 사용 중이 아닌 경우
-			if (!isLocked) {
-				Long peek = waitingQueue.peek();
-
-				// waitingQueue의 첫 번째 요소가 userId인 경우
-				if (peek != null && peek.equals(userId)) {
-					locks.put(lockId, Pair.of(userId, true));
-					waitingQueue.poll();
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
+		// waitingQueue에 userId가 존재하는지 확인
+		if (!waitingQueue.contains(userId)) {
+			waitingQueue.add(userId);
 		}
 
-		// userId에게 락 정보가 없는 경우
-		locks.put(lockId, Pair.of(userId, true));
-		return true;
+		Long peek = waitingQueue.peek();
+		// waitingQueue의 첫 번째 요소가 userId인지 확인
+		if (peek != null && peek.equals(userId)) {
+			locks.put(lockId, Pair.of(userId, true));
+			waitingQueue.poll();
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
