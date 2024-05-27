@@ -29,11 +29,12 @@ public class RabbitCountDownHandler {
 		this.objectMapper = objectMapper;
 	}
 
-	@RabbitListener(queues = "queue.waiting", concurrency = "1", ackMode = "MANUAL")
+	@RabbitListener(queues = "queue.waiting.consumer", ackMode = "MANUAL", concurrency = "3")
 	public void onMessage(Message message, @Nullable Channel channel) throws IOException {
 		byte[] body = message.getBody();
 		CountDownMessage countDownMessage = objectMapper.readValue(body, CountDownMessage.class);
-		log.info("Received message: {}", countDownMessage);
+		Thread currentThread = Thread.currentThread();
+		log.info("[{}]Received message: {}", currentThread, countDownMessage);
 
 		try {
 			countDownService.countDown(countDownMessage.getId().toString());
@@ -41,12 +42,12 @@ public class RabbitCountDownHandler {
 			countDownMessage.onDone();
 			countDownMessageRecords.update(countDownMessage);
 
-			log.info(">>> Success Handle message : {}", countDownMessage);
+			log.info("[{}] Success Handle message : {}", currentThread.getName(), countDownMessage);
 		} catch (Exception e) {
 			countDownMessage.onFailed();
 			countDownMessageRecords.update(countDownMessage);
 
-			log.warn(">>> Fail Handle message : {}", countDownMessage);
+			log.warn("[{}] Fail Handle message : {}", currentThread.getName(), countDownMessage);
 		} finally {
 			channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
 		}
