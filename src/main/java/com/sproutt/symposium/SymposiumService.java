@@ -22,12 +22,12 @@ public class SymposiumService {
 	}
 
 	public String execute() {
-		Long targetId = 1L;
+		Long lockId = 1L;
 		Long userId = atomicUserId.incrementAndGet();
 		LocalDateTime now = LocalDateTime.now();
 		log.info("[{}] User {} is trying to execute", now, userId);
 
-		while (!lockService.lock(targetId, userId)) {
+		while (!lockService.lock(lockId, userId)) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -38,7 +38,7 @@ public class SymposiumService {
 		try {
 			countDownService.countDown(userId + " is executing");
 		} finally {
-			lockService.unlock(targetId, userId);
+			lockService.unlock(lockId, userId);
 		}
 
 		return "[" + now + "] User " + userId + " executed successfully";
